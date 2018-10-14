@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HipsterBank</title>
+  <base href="/">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+  <div class="content">
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">HipsterBank</a>
+
+          <button id="homeBtn" class="btn btn-primary btn-margin">
+              Home
+          </button>
+
+          <button id="userLoginBtn" class="btn btn-primary btn-margin">
+              Log In
+          </button>
+
+          <button id="userLogoutBtn" class="btn btn-primary btn-margin">
+              Log Out
+          </button>
+
+          <button id="profileBtn" class="btn btn-primary btn-margin">
+              Profile
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <!-- home view -->
+      <div id="home-view">
+        <h4></h4>
+      </div>
+  
+      <div id="profile-view" class="panel panel-default profile-area">
+        <div class="panel-heading"><h3>Profile</h3></div>
+          <div class="panel-body">
+            <img class="avatar" alt="avatar">
+            <div>
+              <label><i class="glyphicon glyphicon-user"></i> Nickname</label>
+              <h3 class="nickname"></h3>
+            </div>
+            <pre class="full-profile"></pre>
+          </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="auth0-variables.js"></script>
+  <script src="https://cdn.auth0.com/js/lock/11.10.0/lock.min.js"></script>
+  <script src="node_modules/auth0-js/build/auth0.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
