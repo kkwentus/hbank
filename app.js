@@ -2,10 +2,9 @@ window.addEventListener('load', function() {
   var userProfile;
   var content = document.querySelector('.content');
   content.style.display = 'block';
-  var isAuthenticated = new Boolean(0);
+  var isAuthenticated = new Boolean(false);
 
-
-  var webAuth = new auth0.WebAuth({
+/** var webAuth = new auth0.WebAuth({
     domain: AUTH0_DOMAIN,
     clientID: AUTH0_CLIENT_ID,
     redirectUri: AUTH0_CALLBACK_URL,
@@ -14,6 +13,7 @@ window.addEventListener('load', function() {
     scope: 'openid profile email',
     leeway: 60
   });
+  */
 
   var lockoptions = {
     theme: {
@@ -60,7 +60,7 @@ window.addEventListener('load', function() {
   profileViewBtn.addEventListener('click', function() {
     homeView.style.display = 'none';
     profileView.style.display = 'inline-block';
-    getProfile();
+    displayProfile();
   });
 
   loginBtn.addEventListener('click', function(e) {
@@ -71,30 +71,19 @@ window.addEventListener('load', function() {
 
   logoutBtn.addEventListener('click', logout);
 
-  /** 
-  function setSession(authResult) {
-    // Set the time that the access token will expire at
-    var expiresAt = JSON.stringify(
-      authResult.expiresIn * 1000 + new Date().getTime()
-    );
-    localStorage.setItem('access_token', authResult.accessToken);
-    localStorage.setItem('id_token', authResult.idToken);
-    localStorage.setItem('expires_at', expiresAt);
-  }
-  */
 
   function logout() {
     // Remove tokens and expiry time from localStorage
     localStorage.removeItem('access_token');
-    localStorage.removeItem('id_token');
-    localStorage.removeItem('expires_at');
+    isAuthenticated = false;
     displayButtons();
   }
 
 
   function displayButtons() {
     var loginStatus = document.querySelector('.container h4');
-    if (isAuthenticated) {
+    console.log(isAuthenticated);
+    if (isAuthenticated == true) {
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
       profileViewBtn.style.display = 'inline-block';
@@ -112,28 +101,6 @@ window.addEventListener('load', function() {
   }//end displayButtons
 
 
-function getProfile() {
-  if (!userProfile) {
-      var accessToken = localStorage.getItem('access_token');
-
-      if (!accessToken) {
-        console.log('Access token must exist to fetch profile');
-      }
-
-      console.log('displaying profile');
-      webAuth.client.userInfo(accessToken, function(err, profile) {
-        if (profile) {
-          userProfile = profile;
-          console.log("WEBAUTH PROFILE")
-          console.log(JSON.stringify(userProfile, undefined, 2));
-          displayProfile();
-        }
-      });
-    } else {
-      displayProfile();
-    }
-  } //end getProfile
-
   function displayProfile() {
     document.querySelector('#profile-view .nickname').innerHTML =
       userProfile.nickname;
@@ -142,25 +109,6 @@ function getProfile() {
     ).innerHTML = JSON.stringify(userProfile, null, 2);
     document.querySelector('#profile-view img').src = userProfile.picture;
   }//end displayProfile
-/** 
-  function handleAuthentication() {
-    webAuth.parseHash(function(err, authResult) {
-      if (authResult && authResult.accessToken && authResult.idToken) {
-        window.location.hash = '';
-        setSession(authResult);
-        loginBtn.style.display = 'none';
-        homeView.style.display = 'inline-block';
-      } else if (err) {
-        homeView.style.display = 'inline-block';
-        console.log(err);
-        alert(
-          'Error: ' + err.error + '. Check the console for further details.'
-        );
-      }
-      displayButtons();
-    });
-  }//end handleAuthentication
-*/
 
 
   lock.on("authenticated", function(authResult) {
@@ -172,11 +120,15 @@ function getProfile() {
         }
         console.log("LOCK");
         console.log(JSON.stringify(profile, undefined, 2));
+        userProfile = profile;
 
         // Store the token from authResult for later use
         localStorage.setItem('accessToken', authResult.accessToken);
-        isAuthenticated = 1;
+        isAuthenticated = true;
+        displayButtons();
       });
   });//end on
+
+  displayButtons();
 
 });//end app.js
