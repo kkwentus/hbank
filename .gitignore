@@ -2,4 +2,5 @@
 /mongo
 /mongo-data
 auth0-variables.js
+fullvars.js
 .env
