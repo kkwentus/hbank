@@ -74,7 +74,7 @@ window.addEventListener('load', function() {
 
   function logout() {
     // Remove tokens and expiry time from localStorage
-    localStorage.removeItem('access_token');
+    localStorage.removeItem('accessToken');
     isAuthenticated = false;
     displayButtons();
   }

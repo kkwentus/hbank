@@ -1,4 +1,5 @@
 /node_modules
-blankvars.js
-fullvars.js
-heroku-variables.js
+/mongo
+/mongo-data
+auth0-variables.js
+.env
