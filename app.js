@@ -4,17 +4,22 @@ window.addEventListener('load', function() {
   content.style.display = 'block';
   var isAuthenticated = new Boolean(false);
 
-/** var webAuth = new auth0.WebAuth({
+  var hipsterURL = AUTH0_API_URL;
+
+ ///webAuth for API token
+  var webAuth = new auth0.WebAuth({
     domain: AUTH0_DOMAIN,
     clientID: AUTH0_CLIENT_ID,
     redirectUri: AUTH0_CALLBACK_URL,
     audience: 'https://' + AUTH0_DOMAIN + '/userinfo',
-    responseType: 'token id_token',
+    responseType: 'token',
     scope: 'openid profile email',
     leeway: 60
   });
-  */
-
+  
+  
+//////////////////////////////////// 
+/// LOCK UI for login
   var lockoptions = {
     theme: {
       logo: 'http://i67.tinypic.com/28mppw8.jpg',
@@ -40,17 +45,25 @@ window.addEventListener('load', function() {
       }
     });
   });
-
+////////////////////////////////
 
   var loginStatus = document.querySelector('.container h4');
   var loginView = document.getElementById('login-view');
   var homeView = document.getElementById('home-view');
   var profileView = document.getElementById('profile-view');
+  var apiView = document.getElementById('api-view');
 
   var loginBtn = document.getElementById('userLoginBtn');
   var logoutBtn = document.getElementById('userLogoutBtn');
   var homeViewBtn = document.getElementById('homeBtn');
   var profileViewBtn = document.getElementById('profileBtn');
+
+  var apiCreateBtn = document.getElementById('apiCreateBtn');
+  var apiDeleteBtn = document.getElementById('apiDeleteBtn');
+  var apiMessage = document.getElementById('apiMessage');
+
+
+////  Login, Logout, Profile buttons
 
   homeViewBtn.addEventListener('click', function() {
     homeView.style.display = 'inline-block';
@@ -71,10 +84,13 @@ window.addEventListener('load', function() {
 
   logoutBtn.addEventListener('click', logout);
 
+  /////////////////////////////////////////////////
 
   function logout() {
     // Remove tokens and expiry time from localStorage
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('scopes');
+
     isAuthenticated = false;
     displayButtons();
   }
@@ -82,22 +98,44 @@ window.addEventListener('load', function() {
 
   function displayButtons() {
     var loginStatus = document.querySelector('.container h4');
-    console.log(isAuthenticated);
+
+    //buttons shown when user is logged in
     if (isAuthenticated == true) {
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
       profileViewBtn.style.display = 'inline-block';
       loginStatus.innerHTML =
-        'You are logged in.';
+        'Authenticated.';
+      //should we show management buttons?
+      if (userHasScopes(['create:customers']) && userHasScopes(['delete:customers']) ) {
+          apiCreateBtn.style.display = 'inline-block';
+          apiDeleteBtn.style.display = 'inline-block';
+          apiView.style.display = 'inline-block';
+      }
+      else if(userHasScopes(['create:customers'])){
+          apiCreateBtn.style.display = 'inline-block';
+          apiDeleteBtn.style.display = 'none';
+          apiView.style.display = 'inline-block';
+      }
+      else {
+          apiCreateBtn.style.display = 'none';
+          apiDeleteBtn.style.display = 'none';
+          apiView.style.display = 'none';
+      }
+    //buttons shown for users not logged in    
     } else {
       homeView.style.display = 'inline-block';
       loginBtn.style.display = 'inline-block';
       logoutBtn.style.display = 'none';
       profileViewBtn.style.display = 'none';
       profileView.style.display = 'none';
+      apiCreateBtn.style.display = 'none';
+      apiDeleteBtn.style.display = 'none';
+      apiView.style.display = 'none';
       loginStatus.innerHTML =
-        'Welcome';
+        'Please Log in';
     }
+  
   }//end displayButtons
 
 
@@ -110,24 +148,97 @@ window.addEventListener('load', function() {
     document.querySelector('#profile-view img').src = userProfile.picture;
   }//end displayProfile
 
-
-  lock.on("authenticated", function(authResult) {
-      // Call getUserInfo using the token from authResult
-      lock.getUserInfo(authResult.accessToken, function(error, profile) {
-        if (error) {
-          // Handle error
+   //API calls authenticated against permissions in userHasScopes
+    apiCreateBtn.addEventListener('click', function() {
+      callAPI('/customers', true, 'POST', function(err, response) {
+        if (err) {
+          alert(err);
           return;
         }
-        console.log("LOCK");
-        console.log(JSON.stringify(profile, undefined, 2));
-        userProfile = profile;
-
-        // Store the token from authResult for later use
-        localStorage.setItem('accessToken', authResult.accessToken);
-        isAuthenticated = true;
-        displayButtons();
+        // update message
+        document.querySelector('#apiMessage').innerHTML = response;
       });
-  });//end on
+    });
+  
+    apiDeleteBtn.addEventListener('click', function() {
+      callAPI('/customers', true, 'DELETE', function(err, response) {
+        if (err) {
+          alert(err);
+          return;
+        }
+        // update message
+        document.querySelector('#apiMessage').innerHTML = response;
+      });
+    });
+
+  ///////////////////////////////////////////////////
+
+  lock.on("authenticated", function(authResult) {
+    // Call getUserInfo using the token from authResult
+    lock.getUserInfo(authResult.accessToken, function(error, profile) {
+      if (error) {
+        console.log(error);
+        return;
+      }
+        console.log("LOCK authentication registered");
+        
+      localStorage.setItem('accessToken', authResult.accessToken);
+        console.log("LOCK ACCESS TOKEN")
+        console.log(authResult.accessToken);
+
+        
+      localStorage.setItem('profile', JSON.stringify(profile));
+      userProfile = profile;
+        console.log(JSON.stringify(profile, undefined, 2));
+        
+      localStorage.setItem('scopes', JSON.stringify(authResult.scope, undefined, 2));
+        console.log(JSON.stringify(authResult.scope, undefined, 2));
+
+      isAuthenticated = true;
+      
+      displayButtons();
+    });
+});//end authenticated on
+
+  //does the token of this user have an appropriate scope?
+  function userHasScopes(scopes) {
+    var savedScopes = JSON.parse(localStorage.getItem('scopes'));
+    if (!savedScopes) {
+      return false;
+    }
+
+    var grantedScopes = savedScopes.split(' ');
+
+    for (var i = 0; i < scopes.length; i++) {
+      if (grantedScopes.indexOf(scopes[i]) < 0) {
+        return false;
+      }
+    }
+  
+    return true;
+}
+ 
+  function callAPI(endpoint, secured, method, cb) {
+    var url = hipsterURL + endpoint;
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    if (secured) {
+      xhr.setRequestHeader(
+        'Authorization',
+        'Bearer ' + localStorage.getItem('accessToken')
+      );
+    }
+    console.log(localStorage.getItem('accessToken'));
+    xhr.onload = function() {
+      if (xhr.status == 200) {
+        var message = JSON.parse(xhr.responseText).message;
+        cb(null, message);
+      } else {
+        cb(xhr.statusText);
+      }
+    };
+    xhr.send();
+  }
 
   displayButtons();
 

@@ -2,9 +2,10 @@
 const express = require('express');
 const port = process.env.PORT || 3000;
 
-const bparser = require('body-parser');
+const bodyparser = require('body-parser');
 const jwt = require('express-jwt');
 const jwksRsa = require('jwks-rsa');
+const jwtAuthz = require('express-jwt-authz');
 const cors = require('cors');
 
 var app = express();
@@ -22,27 +23,13 @@ const {ObjectId} = require('mongodb');
 
 //setup middleware
 app.use(express.static(__dirname));
-app.use(bparser.json());
-app.use(bparser.urlencoded({
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({
     extended: true
   }));
 app.use(cors());
 
 
-/** 
-var options = { method: 'POST',
-  url: 'https://kkwen.auth0.com/oauth/token',
-  headers: { 'content-type': 'application/json' },
-  body: '{"client_id":"vEk1MVJASZN3ljLmyVq87sE7FKNPXuId","client_secret":"gReoeH-nCCy7MXGMbXLqAvmXWraAwfZ1OhrDBxGYuHkCglP1XsrHzTen4n0s6Oh4","audience":"urn:auth0-authz-api","grant_type":"client_credentials"}' 
-};
-
-request(options, function (error, response, body) {
-  if (error){
-    throw new Error(error);
-  }
-  console.log(body);
-});
-*/
 // Create middleware for checking the JWT
 const checkJwt = jwt({
     // Dynamically provide a signing key based on the kid in the header 
@@ -55,7 +42,7 @@ const checkJwt = jwt({
     }),
   
     // Validate the audience and the issuer
-    audience: 'urn:auth0-authz-api', 
+    audience: 'HIPSTERBANKURL', 
     issuer: 'https://kkwen.auth0.com',
     algorithms: [ 'RS256' ]
   });
@@ -67,7 +54,18 @@ app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname + '/index.html'));
 });
 
-app.post('/customers', function(request, response) {
+//stub out create and delete API calls
+app.post('/customers', checkJwt, jwtAuthz(['create:customers']), function(request, response) {
+    response.json({ message: "A new customer has been created" });
+});
+
+
+app.delete('/customers', checkJwt, jwtAuthz(['delete:customers']), function(request, response) {
+    response.json({ message: "A customer has been deleted" });
+});
+
+
+/** app.post('/customers', checkJwt, function(request, response) {
     console.log('add customer record requested', request.body);
 
     var cust = new Customer({
@@ -86,7 +84,7 @@ app.post('/customers', function(request, response) {
         console.log('unable to create new customer');
     });  
 });
-
+**/
 
 //start the webserver
 app.listen(port, ()=> {

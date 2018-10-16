@@ -3,4 +3,5 @@
 /mongo-data
 auth0-variables.js
 fullvars.js
+herokuvars.js
 .env
