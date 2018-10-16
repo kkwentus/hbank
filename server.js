@@ -7,6 +7,7 @@ const jwt = require('express-jwt');
 const jwksRsa = require('jwks-rsa');
 const jwtAuthz = require('express-jwt-authz');
 const cors = require('cors');
+//const jsonwebtoken = require('jsonwebtoken');
 
 var app = express();
 var path = require('path');
@@ -29,7 +30,6 @@ app.use(bodyparser.urlencoded({
   }));
 app.use(cors());
 
-
 // Create middleware for checking the JWT
 const checkJwt = jwt({
     // Dynamically provide a signing key based on the kid in the header 
@@ -43,24 +43,28 @@ const checkJwt = jwt({
   
     // Validate the audience and the issuer
     audience: 'HIPSTERBANKURL', 
-    issuer: 'https://kkwen.auth0.com',
+    issuer: 'https://kkwen.auth0.com/',
     algorithms: [ 'RS256' ]
   });
 
+const checkCreate = jwtAuthz([ 'create:customers' ]);
+const checkDelete = jwtAuthz([ 'delete:customers' ]);
+
 
 //endpoints
+
 
 app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname + '/index.html'));
 });
 
 //stub out create and delete API calls
-app.post('/customers', checkJwt, jwtAuthz(['create:customers']), function(request, response) {
+app.post('/customers', checkJwt, checkCreate, function(request, response) {
     response.json({ message: "A new customer has been created" });
 });
 
 
-app.delete('/customers', checkJwt, jwtAuthz(['delete:customers']), function(request, response) {
+app.delete('/customers', checkJwt, checkDelete, function(request, response) {
     response.json({ message: "A customer has been deleted" });
 });
 

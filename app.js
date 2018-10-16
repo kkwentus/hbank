@@ -6,19 +6,17 @@ window.addEventListener('load', function() {
 
   var hipsterURL = AUTH0_API_URL;
 
-/** 
-  var webAuth = new auth0.WebAuth({
+/** var webAuth = new auth0.WebAuth({
     domain: AUTH0_DOMAIN,
     clientID: AUTH0_CLIENT_ID,
     redirectUri: AUTH0_CALLBACK_URL,
-    audience: 'https://' + AUTH0_DOMAIN + '/userinfo',
+    audience: AUTH0_AUDIENCE,
     responseType: 'token',
     scope: 'openid profile email',
     leeway: 60
   });
+  */
 
-**/
-  
   
 //////////////////////////////////// 
 /// LOCK UI for login
@@ -29,8 +27,14 @@ window.addEventListener('load', function() {
     },
     languageDictionary: {
       title: "HipsterBank"
+    },
+    auth:{
+      params:{
+        scope: 'openid profile email',         
+        audience: 'HIPSTERBANKURL'
+      }
     }
-  };
+};
 
    //using auth0 lock feature
    var lock = new Auth0Lock(
@@ -94,6 +98,7 @@ window.addEventListener('load', function() {
     localStorage.removeItem('scopes');
 
     isAuthenticated = false;
+    //lock.logout();
     displayButtons();
   }
 
@@ -177,16 +182,19 @@ window.addEventListener('load', function() {
 
   lock.on("authenticated", function(authResult) {
     // Call getUserInfo using the token from authResult
+    console.log("LOCK authentication registered");
+
     lock.getUserInfo(authResult.accessToken, function(error, profile) {
       if (error) {
         console.log(error);
         return;
       }
-        console.log("LOCK authentication registered");
+        console.log("AUTHRESULT");
+        console.log(JSON.stringify(authResult, undefined, 2));    
         
       localStorage.setItem('accessToken', authResult.accessToken);
-        console.log("LOCK ACCESS TOKEN")
-        console.log(authResult.accessToken);
+          console.log("LOCK ACCESS TOKEN")
+          console.log(authResult.accessToken);
 
         
       localStorage.setItem('profile', JSON.stringify(profile));
@@ -230,7 +238,6 @@ window.addEventListener('load', function() {
         'Bearer ' + localStorage.getItem('accessToken')
       );
     }
-    console.log(localStorage.getItem('accessToken'));
     xhr.onload = function() {
       if (xhr.status == 200) {
         var message = JSON.parse(xhr.responseText).message;
