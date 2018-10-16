@@ -5,18 +5,6 @@ window.addEventListener('load', function() {
   var isAuthenticated = new Boolean(false);
 
   var hipsterURL = AUTH0_API_URL;
-
-/** var webAuth = new auth0.WebAuth({
-    domain: AUTH0_DOMAIN,
-    clientID: AUTH0_CLIENT_ID,
-    redirectUri: AUTH0_CALLBACK_URL,
-    audience: AUTH0_AUDIENCE,
-    responseType: 'token',
-    scope: 'openid profile email',
-    leeway: 60
-  });
-  */
-
   
 //////////////////////////////////// 
 /// LOCK UI for login
@@ -112,7 +100,7 @@ window.addEventListener('load', function() {
       logoutBtn.style.display = 'inline-block';
       profileViewBtn.style.display = 'inline-block';
       loginStatus.innerHTML =
-        'Authenticated.';
+        ' ';
       //should we show management buttons?
       if (userHasScopes(['create:customers']) && userHasScopes(['delete:customers']) ) {
           apiCreateBtn.style.display = 'inline-block';
@@ -189,20 +177,21 @@ window.addEventListener('load', function() {
         console.log(error);
         return;
       }
-        console.log("AUTHRESULT");
         console.log(JSON.stringify(authResult, undefined, 2));    
         
       localStorage.setItem('accessToken', authResult.accessToken);
-          console.log("LOCK ACCESS TOKEN")
-          console.log(authResult.accessToken);
+         // console.log("Access Token::")
+         // console.log(authResult.accessToken);
 
         
       localStorage.setItem('profile', JSON.stringify(profile));
       userProfile = profile;
-        console.log(JSON.stringify(profile, undefined, 2));
+        //console.log("User Profile::")
+        //console.log(JSON.stringify(profile, undefined, 2));
         
       localStorage.setItem('scopes', JSON.stringify(authResult.scope, undefined, 2));
-        console.log(JSON.stringify(authResult.scope, undefined, 2));
+        //console.log("Scopes::");
+        //console.log(JSON.stringify(authResult.scope, undefined, 2));
 
       isAuthenticated = true;
       
