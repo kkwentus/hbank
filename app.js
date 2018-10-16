@@ -19,10 +19,10 @@ window.addEventListener('load', function() {
     auth:{
       params:{
         scope: 'openid profile email',         
-        audience: 'HIPSTERBANKURL'
+        audience: AUTH0_AUDIENCE
       }
     }
-};
+  };
 
    //using auth0 lock feature
    var lock = new Auth0Lock(
@@ -38,7 +38,36 @@ window.addEventListener('load', function() {
         text: error.errorDescription
       }
     });
-  });
+  });//end
+
+  lock.on("authenticated", function(authResult) {
+    // Call getUserInfo using the token from authResult
+    console.log("LOCK authentication registered");
+
+    lock.getUserInfo(authResult.accessToken, function(error, profile) {
+      if (error) {
+        console.log(error);
+        return;
+      }
+        console.log(JSON.stringify(authResult, undefined, 2));    
+        
+      localStorage.setItem('accessToken', authResult.accessToken);
+         // console.log("Access Token::")
+         // console.log(authResult.accessToken);
+
+      userProfile = profile;
+        //console.log("User Profile::")
+        //console.log(JSON.stringify(profile, undefined, 2));
+        
+      localStorage.setItem('scopes', JSON.stringify(authResult.scope, undefined, 2));
+        //console.log("Scopes::");
+        //console.log(JSON.stringify(authResult.scope, undefined, 2));
+
+      isAuthenticated = true;
+      
+      displayButtons();
+    });
+});//end authenticated on
 ////////////////////////////////
 
   var loginStatus = document.querySelector('.container h4');
@@ -72,7 +101,6 @@ window.addEventListener('load', function() {
 
   loginBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    //webAuth.authorize();
     lock.show();
   });
 
@@ -84,11 +112,12 @@ window.addEventListener('load', function() {
     // Remove tokens and expiry time from localStorage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('scopes');
+    localStorage.removeItem('profile');
 
     isAuthenticated = false;
-    //lock.logout();
+    lock.logout();
     displayButtons();
-  }
+  }//end logout
 
 
   function displayButtons() {
@@ -130,7 +159,6 @@ window.addEventListener('load', function() {
       loginStatus.innerHTML =
         'Please Log in';
     }
-  
   }//end displayButtons
 
 
@@ -143,63 +171,31 @@ window.addEventListener('load', function() {
     document.querySelector('#profile-view img').src = userProfile.picture;
   }//end displayProfile
 
-   //API calls authenticated against permissions in userHasScopes
-    apiCreateBtn.addEventListener('click', function() {
-      callAPI('/customers', true, 'POST', function(err, response) {
-        if (err) {
-          alert(err);
-          return;
-        }
-        // update message
-        document.querySelector('#apiMessage').innerHTML = response;
-      });
-    });
-  
-    apiDeleteBtn.addEventListener('click', function() {
-      callAPI('/customers', true, 'DELETE', function(err, response) {
-        if (err) {
-          alert(err);
-          return;
-        }
-        // update message
-        document.querySelector('#apiMessage').innerHTML = response;
-      });
-    });
-
-  ///////////////////////////////////////////////////
-
-  lock.on("authenticated", function(authResult) {
-    // Call getUserInfo using the token from authResult
-    console.log("LOCK authentication registered");
-
-    lock.getUserInfo(authResult.accessToken, function(error, profile) {
-      if (error) {
-        console.log(error);
+   //API calls, server side authenticated against permissions 
+  apiCreateBtn.addEventListener('click', function() {
+    callAPI('/customers', true, 'POST', function(err, response) {
+      if (err) {
+        alert(err);
         return;
       }
-        console.log(JSON.stringify(authResult, undefined, 2));    
-        
-      localStorage.setItem('accessToken', authResult.accessToken);
-         // console.log("Access Token::")
-         // console.log(authResult.accessToken);
-
-        
-      localStorage.setItem('profile', JSON.stringify(profile));
-      userProfile = profile;
-        //console.log("User Profile::")
-        //console.log(JSON.stringify(profile, undefined, 2));
-        
-      localStorage.setItem('scopes', JSON.stringify(authResult.scope, undefined, 2));
-        //console.log("Scopes::");
-        //console.log(JSON.stringify(authResult.scope, undefined, 2));
-
-      isAuthenticated = true;
-      
-      displayButtons();
+  
+      document.querySelector('#apiMessage').innerHTML = response;
     });
-});//end authenticated on
+  });//end
+  
+  apiDeleteBtn.addEventListener('click', function() {
+    callAPI('/customers', true, 'DELETE', function(err, response) {
+      if (err) {
+        alert(err);
+        return;
+      }
+  
+      document.querySelector('#apiMessage').innerHTML = response;
+    });
+  });//end
 
-  //does the token of this user have an appropriate scope?
+ 
+  //UI buttons - does the token of this user have an appropriate scope?
   function userHasScopes(scopes) {
     var savedScopes = JSON.parse(localStorage.getItem('scopes'));
     if (!savedScopes) {
@@ -215,8 +211,33 @@ window.addEventListener('load', function() {
     }
   
     return true;
-}
+  }
  
+  //API calls, server side authenticated against permissions 
+  apiCreateBtn.addEventListener('click', function() {
+    callAPI('/customers', true, 'POST', function(err, response) {
+      if (err) {
+        alert(err);
+        return;
+      }
+  
+      document.querySelector('#apiMessage').innerHTML = response;
+    });
+  });
+  
+  apiDeleteBtn.addEventListener('click', function() {
+    callAPI('/customers', true, 'DELETE', function(err, response) {
+      if (err) {
+        alert(err);
+        return;
+      }
+  
+      document.querySelector('#apiMessage').innerHTML = response;
+    });
+  });
+
+
+ //call API with the token received from Lock
   function callAPI(endpoint, secured, method, cb) {
     var url = hipsterURL + endpoint;
     var xhr = new XMLHttpRequest();
@@ -236,8 +257,9 @@ window.addEventListener('load', function() {
       }
     };
     xhr.send();
-  }
+  }//end callAPI
 
+  //show login screen
   displayButtons();
 
 });//end app.js

@@ -10,7 +10,7 @@ const cors = require('cors');
 
 var app = express();
 var path = require('path');
-//var request = require("request");
+
 
 //setup database & customer 
 var mongoose = require('mongoose');
@@ -51,8 +51,6 @@ const checkDelete = jwtAuthz([ 'delete:customers' ]);
 
 
 //endpoints
-
-
 app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname + '/index.html'));
 });
