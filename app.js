@@ -6,7 +6,7 @@ window.addEventListener('load', function() {
 
   var hipsterURL = AUTH0_API_URL;
 
- ///webAuth for API token
+/** 
   var webAuth = new auth0.WebAuth({
     domain: AUTH0_DOMAIN,
     clientID: AUTH0_CLIENT_ID,
@@ -16,6 +16,8 @@ window.addEventListener('load', function() {
     scope: 'openid profile email',
     leeway: 60
   });
+
+**/
   
   
 //////////////////////////////////// 
